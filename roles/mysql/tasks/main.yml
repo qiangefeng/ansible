@@ -1,0 +1,16 @@
+---
+#envCode
+- name: mkdir mysql conf
+  file: path=/root/{{ envCode }}/mysql/conf state=directory
+  
+- name: cp my-mysql.cnf
+  copy: src=my-mysql.cnf dest=/root/{{ envCode }}/mysql/conf/my-mysql.cnf
+  register: upMysql
+  
+- name: rm mysql docker
+  shell: docker ps -a | grep mysql && docker rm -f mysql;echo "rm mysql docker"
+  when: upMysql.changed == true
+  
+- name: run mysql docker
+  shell: docker run --name mysql  -v /root/{{ envCode }}/mysql/conf/:/etc/mysql/conf.d -v /root/{{ envCode }}/mysql/logs:/logs -v /root/{{ envCode }}/mysql/data:/var/lib/mysql -v /etc/localtime:/etc/localtime:ro -e MYSQL_ROOT_PASSWORD=123456 -p 3306:3306 -d mysql:5.6
+  when: upMysql.changed == true

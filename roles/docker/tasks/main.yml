@@ -1,0 +1,24 @@
+---
+- name: ssh add key
+  authorized_key: user=root key="{{ lookup('file', '/root/.ssh/id_rsa.pub') }}" state=present
+  
+- name: install  yum-utils device-mapper-persistent-data lvm2
+  yum:
+    name:
+      - yum-utils
+      - device-mapper-persistent-data
+      - lvm2
+      - unzip
+      - fontconfig
+    state: present
+  register: inital
+
+- name: add repo
+  shell: yum-config-manager --add-repo http://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo && yum makecache fast
+  when: inital.changed == true
+
+- name: install docker-ce
+  yum: name=docker-ce state=present
+
+- name: start docker
+  systemd: name=docker state=started enabled=yes
